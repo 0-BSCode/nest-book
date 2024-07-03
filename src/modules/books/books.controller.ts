@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
   Post,
   Put,
   ValidationPipe,
@@ -43,5 +44,21 @@ export class BooksController {
   @Delete(':id')
   deleteOne(@Param('id', ParseIntPipe) id: number) {
     return this.booksService.deleteOne(id);
+  }
+
+  @Patch('add-authors/:id')
+  addAuthors(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('authorIds') authorIds: number[],
+  ) {
+    return this.booksService.addAuthors(id, authorIds);
+  }
+
+  @Patch('remove-authors/:id')
+  removeAuthors(
+    @Param('id', ParseIntPipe) id: number,
+    @Body('authorIds') authorIds: number[],
+  ) {
+    return this.booksService.removeAuthors(id, authorIds);
   }
 }

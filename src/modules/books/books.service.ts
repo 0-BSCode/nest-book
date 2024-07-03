@@ -18,7 +18,9 @@ export class BooksService {
   }
 
   async findOneById(id: number): Promise<Book | null> {
-    const book = await this.booksRepository.findOne({ where: { id } });
+    const book = await this.booksRepository.findOne({ where: { id }, relations: {
+        authors: true
+    } });
 
     if (!book) {
       throw new NotFoundException(`Book with ID ${id} not found`);
@@ -71,5 +73,36 @@ export class BooksService {
     await this.findOneById(id);
     await this.booksRepository.delete(id);
     return id;
+  }
+
+  async addAuthors(id: number, authorIds: number[]): Promise<Book | null> {
+    await this.findOneById(id);
+
+    const authors = await this.authorsService.findManyById(authorIds);
+    if (authors.length !== authorIds.length) {
+      throw new NotFoundException(`One or more authors not found`);
+    }
+    const book = new Book();
+    book.id = id;
+    book.authors = authors;
+    return await this.booksRepository.save(book);
+  }
+
+  async removeAuthors(id: number, authorIds: number[]): Promise<Book | null> {
+    const book = await this.findOneById(id);
+    const authors = await this.authorsService.findManyById(authorIds);
+    if (authors.length !== authorIds.length) {
+      throw new NotFoundException(`One or more authors not found`);
+    }
+
+    const hasAllAuthors = book.authors.every((author) =>
+      authorIds.includes(author.id),
+    );
+    if (!hasAllAuthors) {
+      throw new NotFoundException(`Provided author isn't author of book`);
+    }
+
+    book.authors = book.authors.filter((author) => !authorIds.includes(author.id));
+    return await this.booksRepository.save(book);
   }
 }
