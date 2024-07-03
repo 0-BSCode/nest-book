@@ -23,7 +23,7 @@ export class Book {
   })
   price: number;
 
-  @ManyToMany(() => Author)
+  @ManyToMany(() => Author, (author) => author.books)
   @JoinTable()
   authors: Author[];
 }

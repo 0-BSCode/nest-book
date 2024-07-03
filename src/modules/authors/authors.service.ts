@@ -13,13 +13,20 @@ export class AuthorsService {
   ) {}
 
   async findAll(): Promise<Author[]> {
-    return await this.authorsRepository.find();
+    return await this.authorsRepository.find({
+      relations: {
+        books: true,
+      },
+    });
   }
 
   async findOneById(id: number): Promise<Author | null> {
     const author = await this.authorsRepository.findOne({
       where: {
         id,
+      },
+      relations: {
+        books: true,
       },
     });
 

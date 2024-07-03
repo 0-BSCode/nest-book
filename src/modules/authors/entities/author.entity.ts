@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Book } from 'src/modules/books/entities/book.entity';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum Gender {
   M = 'male',
@@ -21,4 +22,7 @@ export class Author {
     enum: Gender,
   })
   gender: Gender;
+
+  @ManyToMany(() => Book, (book) => book.authors)
+  books: Book[];
 }
