@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 import { AuthorsModule } from './modules/authors/authors.module';
+import { BooksModule } from './modules/books/books.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AuthorsModule } from './modules/authors/authors.module';
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
     }),
     AuthorsModule,
+    BooksModule,
   ],
   controllers: [AppController],
   providers: [AppService],
