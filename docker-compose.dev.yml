@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  book-api-db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
+    ports:
+      - ${DB_PORT}:${DB_PORT}
+    volumes:
+      - book-api-db:/var/lib/postgresql/data
+    networks:
+      - book-api-network
+  
+  book-api-db-gui:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - book-api-db
+    networks:
+      - book-api-network
+
+volumes:
+  book-api-db:
+
+networks:
+  book-api-network:
+    driver: bridge
