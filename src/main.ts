@@ -2,13 +2,16 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './filters/http-exception/http-exception.filter';
 import { ConfigService } from '@nestjs/config';
+import { ExpressAdapter } from '@nestjs/platform-express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, new ExpressAdapter());
   app.useGlobalFilters(new HttpExceptionFilter());
 
   const configService = app.get(ConfigService);
   const PORT = configService.get<number>('port') || 3000;
-  await app.listen(PORT);
+  await app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Listening on ${PORT}`);
+  });
 }
 bootstrap();
