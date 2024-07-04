@@ -12,7 +12,7 @@ import { config } from './config/config';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: 'src/env/.env',
+      envFilePath: '.env',
       load: [config],
       isGlobal: true,
     }),

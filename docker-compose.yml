@@ -2,11 +2,15 @@ version: '3.9'
 
 services:
   book-api-server:
+    env_file:
+      - .env
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        - PORT=${SERVER_PORT}
     ports:
-      - 8000:8000
+      - ${SERVER_PORT}:${SERVER_PORT}
     networks:
       - book-api-network
 
@@ -14,9 +18,13 @@ services:
     image: postgres
     restart: always
     env_file:
-      - src/env/.docker-compose.env
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_DATABASE}
     ports:
-      - 5432:5432
+      - ${DB_PORT}:${DB_PORT}
     volumes:
       - book-api-db:/var/lib/postgresql/data
     networks:
