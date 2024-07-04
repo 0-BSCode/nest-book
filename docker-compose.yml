@@ -4,7 +4,6 @@ services:
   book-api-db:
     image: postgres
     restart: always
-    shm_size: 128mb
     env_file:
       - env/.docker-compose.env
     ports:
