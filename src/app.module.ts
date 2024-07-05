@@ -9,6 +9,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './filters/http-exception/http-exception.filter';
 import { config } from './config/config';
 import { DatabaseModule } from './database/database.module';
+import { ServerExceptionFilter } from './filters/server-exception/server-exception.filter';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { DatabaseModule } from './database/database.module';
         port: configService.get<number>('dbConfig.port'),
         database: configService.get<string>('dbConfig.name'),
         synchronize: true,
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
+        entities: [__dirname + '/**/*.model{.ts,.js}'],
       }),
     }),
     AuthorsModule,
@@ -40,6 +41,10 @@ import { DatabaseModule } from './database/database.module';
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: ServerExceptionFilter,
     },
   ],
 })
