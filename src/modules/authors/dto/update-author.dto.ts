@@ -1,5 +1,5 @@
 import { IsEnum, IsString, MinLength } from 'class-validator';
-import { Gender } from '../entities/author.entity';
+import { Gender } from 'src/database/models/author.model';
 
 export class UpdateAuthorDto {
   @IsString()

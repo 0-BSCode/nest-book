@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Author } from './entities/author.entity';
+import { Author } from 'src/database/models/author.model';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { AuthorsDbService } from 'src/database/services/authors-db/authors-db.service';
