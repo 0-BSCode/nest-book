@@ -16,19 +16,23 @@ services:
       - book-api-db:/var/lib/postgresql/data
     networks:
       - book-api-network
-  
-  book-api-db-gui:
-    image: adminer
+
+  book-api-admin:
+    image: dpage/pgadmin4
     restart: always
     ports:
-      - 8080:8080
+      - 8888:80
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=test@gmail.com
+      - PGADMIN_DEFAULT_PASSWORD=password
+    volumes:
+      - book-api-admin:/var/lib/pgadmin
     depends_on:
       - book-api-db
-    networks:
-      - book-api-network
 
 volumes:
   book-api-db:
+  book-api-admin:
 
 networks:
   book-api-network:
