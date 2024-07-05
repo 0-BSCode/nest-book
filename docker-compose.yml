@@ -30,15 +30,20 @@ services:
     networks:
       - book-api-network
   
-  book-api-db-gui:
-    image: adminer
+  book-api-admin:
+    image: dpage/pgadmin4
     restart: always
     ports:
-      - 8080:8080
+      - 8888:80
+    env_file:
+      - .env
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    volumes:
+      - book-api-admin:/var/lib/pgadmin
     depends_on:
       - book-api-db
-    networks:
-      - book-api-network
 
 volumes:
   book-api-db:
