@@ -33,10 +33,10 @@ services:
   book-api-admin:
     image: dpage/pgadmin4
     restart: always
-    ports:
-      - 8888:80
     env_file:
       - .env
+    ports:
+      - ${PGADMIN_PORT}:80
     environment:
       - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
       - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
