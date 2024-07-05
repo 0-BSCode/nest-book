@@ -23,6 +23,8 @@ export class Author {
   })
   gender: Gender;
 
-  @ManyToMany(() => Book, (book) => book.authors)
+  @ManyToMany(() => Book, (book) => book.authors, {
+    onDelete: 'CASCADE'
+  })
   books: Book[];
 }
