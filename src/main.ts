@@ -10,7 +10,7 @@ async function bootstrap() {
   console.log(config());
   const app = await NestFactory.create(AppModule, new ExpressAdapter());
   app.useGlobalFilters(new HttpExceptionFilter());
-  app.useGlobalFilters(new ServerExceptionFilter())
+  app.useGlobalFilters(new ServerExceptionFilter());
   const configService = app.get(ConfigService);
   const PORT = configService.get<number>('port') || 3000;
   await app.listen(PORT, '0.0.0.0', () => {
