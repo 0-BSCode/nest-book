@@ -22,3 +22,5 @@ The different environment variables needed for this program to work are listed b
 | `DB_USERNAME` | The username of the user we're logging in as to the postgres container. For example, `postgres` |
 | `DB_PASSWORD` | The password of the user we're logging in as to the postgres container. For example, `postgres` |
 | `DB_DATABASE` | The name of the database we're using in the postgres container. For example, `postgres`         |
+| `PGADMIN_EMAIL` | The email of the user account used in pgadmin. For example, `test@gmail.com` |
+| `PGADMIN_PASSWORD` | The password of the user account used in pgadmin. For example, `password`         |
