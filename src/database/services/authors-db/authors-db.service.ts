@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Author } from 'src/database/models/author.model';
 import { Repository, In } from 'typeorm';
-import { CreateAuthorDto, UpdateAuthorDto } from 'src/database/dto/author.dto';
+import {
+  DbCreateAuthorDto,
+  DbUpdateAuthorDto,
+} from 'src/database/dto/author.dto';
 
 @Injectable()
 export class AuthorsDbService {
@@ -38,7 +41,7 @@ export class AuthorsDbService {
     });
   }
 
-  async createOne(createAuthorDto: CreateAuthorDto): Promise<Author> {
+  async createOne(createAuthorDto: DbCreateAuthorDto): Promise<Author> {
     const author = new Author();
 
     author.name = createAuthorDto.name;
@@ -47,7 +50,7 @@ export class AuthorsDbService {
     return await this.authorsRepository.save(author);
   }
 
-  async updateOne(updateAuthorDto: UpdateAuthorDto): Promise<Author> {
+  async updateOne(updateAuthorDto: DbUpdateAuthorDto): Promise<Author> {
     const author = new Author();
     author.id = updateAuthorDto.id;
     author.name = updateAuthorDto.name;

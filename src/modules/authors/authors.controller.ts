@@ -29,7 +29,7 @@ export class AuthorsController {
 
   @Post()
   createOne(@Body(ValidationPipe) createAuthorDto: CreateAuthorDto) {
-    return this.authorsService.createone(createAuthorDto);
+    return this.authorsService.createOne(createAuthorDto);
   }
 
   @Put(':id')

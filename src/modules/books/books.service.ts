@@ -1,33 +1,28 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Book } from './entities/book.entity';
-import { Repository } from 'typeorm';
 import { CreateBookDto } from './dto/create-book.dto';
-import { AuthorsService } from '../authors/authors.service';
 import { UpdateBookDto } from './dto/update-book.dto';
+import { BooksDbService } from 'src/database/services/books-db/books-db.service';
+import { AuthorsDbService } from 'src/database/services/authors-db/authors-db.service';
+import {
+  DbCreateBookDto,
+  DbEditBookAuthorsDto,
+  DbUpdateBookDto,
+} from 'src/database/dto/book.dto';
 
 @Injectable()
 export class BooksService {
   constructor(
-    @InjectRepository(Book) private readonly booksRepository: Repository<Book>,
-    private readonly authorsService: AuthorsService,
+    private readonly booksDbService: BooksDbService,
+    private readonly authorsDbService: AuthorsDbService,
   ) {}
 
   async findAll(): Promise<Book[]> {
-    return await this.booksRepository.find({
-      relations: {
-        authors: true,
-      },
-    });
+    return this.booksDbService.findAll();
   }
 
   async findOneById(id: number): Promise<Book | null> {
-    const book = await this.booksRepository.findOne({
-      where: { id },
-      relations: {
-        authors: true,
-      },
-    });
+    const book = await this.booksDbService.findOneById(id);
 
     if (!book) {
       throw new NotFoundException(`Book with ID ${id} not found`);
@@ -37,7 +32,7 @@ export class BooksService {
   }
 
   async createOne(createBookDto: CreateBookDto): Promise<Book | null> {
-    const authors = await this.authorsService.findManyById(
+    const authors = await this.authorsDbService.findManyById(
       createBookDto.authorIds,
     );
 
@@ -45,12 +40,14 @@ export class BooksService {
       throw new NotFoundException(`One or more authors not found`);
     }
 
-    const book = new Book();
-    book.name = createBookDto.name;
-    book.description = createBookDto.description;
-    book.price = createBookDto.price;
-    book.authors = authors;
-    return await this.booksRepository.save(book);
+    const dbCreateBookDto: DbCreateBookDto = {
+      name: createBookDto.name,
+      description: createBookDto.description,
+      price: createBookDto.price,
+      authors: authors,
+    };
+
+    return this.booksDbService.createOne(dbCreateBookDto);
   }
 
   async updateOne(
@@ -59,7 +56,7 @@ export class BooksService {
   ): Promise<Book | null> {
     await this.findOneById(id);
 
-    const authors = await this.authorsService.findManyById(
+    const authors = await this.authorsDbService.findManyById(
       updateBookDto.authorIds,
     );
 
@@ -67,37 +64,39 @@ export class BooksService {
       throw new NotFoundException(`One or more authors not found`);
     }
 
-    const book = new Book();
-    book.id = id;
-    book.name = updateBookDto.name;
-    book.description = updateBookDto.description;
-    book.price = updateBookDto.price;
-    book.authors = authors;
-    return await this.booksRepository.save(book);
+    const dbUpdateBookDto: DbUpdateBookDto = {
+      id,
+      authors,
+      ...updateBookDto,
+    };
+
+    return this.booksDbService.updateOne(dbUpdateBookDto);
   }
 
   async deleteOne(id: number): Promise<number | null> {
     await this.findOneById(id);
-    await this.booksRepository.delete(id);
-    return id;
+    return this.booksDbService.deleteOne(id);
   }
 
   async addAuthors(id: number, authorIds: number[]): Promise<Book | null> {
-    await this.findOneById(id);
+    const book = await this.findOneById(id);
 
-    const authors = await this.authorsService.findManyById(authorIds);
+    const authors = await this.authorsDbService.findManyById(authorIds);
     if (authors.length !== authorIds.length) {
       throw new NotFoundException(`One or more authors not found`);
     }
-    const book = new Book();
-    book.id = id;
-    book.authors = authors;
-    return await this.booksRepository.save(book);
+
+    const dbDddAuthorsDto: DbEditBookAuthorsDto = {
+      authors,
+      book,
+    };
+
+    return this.booksDbService.addAuthors(dbDddAuthorsDto);
   }
 
   async removeAuthors(id: number, authorIds: number[]): Promise<Book | null> {
     const book = await this.findOneById(id);
-    const authors = await this.authorsService.findManyById(authorIds);
+    const authors = await this.authorsDbService.findManyById(authorIds);
     if (authors.length !== authorIds.length) {
       throw new NotFoundException(`One or more authors not found`);
     }
@@ -109,9 +108,10 @@ export class BooksService {
       throw new NotFoundException(`Provided author isn't author of book`);
     }
 
-    book.authors = book.authors.filter(
-      (author) => !authorIds.includes(author.id),
-    );
-    return await this.booksRepository.save(book);
+    const dbRemoveAuthorsDto: DbEditBookAuthorsDto = {
+      authors,
+      book,
+    };
+    return this.booksDbService.removeAuthors(dbRemoveAuthorsDto);
   }
 }

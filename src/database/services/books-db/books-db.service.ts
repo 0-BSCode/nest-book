@@ -3,9 +3,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Book } from 'src/database/models/book.model';
 import { Repository } from 'typeorm';
 import {
-  CreateBookDto,
-  EditBookAuthorsDto,
-  UpdateBookDto,
+  DbCreateBookDto,
+  DbEditBookAuthorsDto,
+  DbUpdateBookDto,
 } from 'src/database/dto/book.dto';
 
 @Injectable()
@@ -33,7 +33,7 @@ export class BooksDbService {
     });
   }
 
-  async createOne(createBookDto: CreateBookDto): Promise<Book | null> {
+  async createOne(createBookDto: DbCreateBookDto): Promise<Book | null> {
     const book = new Book();
     book.name = createBookDto.name;
     book.description = createBookDto.description;
@@ -42,7 +42,7 @@ export class BooksDbService {
     return this.booksRepository.save(book);
   }
 
-  async updateOne(updateBookDto: UpdateBookDto): Promise<Book> {
+  async updateOne(updateBookDto: DbUpdateBookDto): Promise<Book> {
     const book = new Book();
     book.id = updateBookDto.id;
     book.name = updateBookDto.name;
@@ -57,7 +57,7 @@ export class BooksDbService {
     return id;
   }
 
-  async addAuthors(addBookAuthorsDto: EditBookAuthorsDto): Promise<Book> {
+  async addAuthors(addBookAuthorsDto: DbEditBookAuthorsDto): Promise<Book> {
     const book = new Book();
     book.id = addBookAuthorsDto.book.id;
     book.name = addBookAuthorsDto.book.name;
@@ -67,7 +67,9 @@ export class BooksDbService {
     return this.booksRepository.save(book);
   }
 
-  async removeAuthors(removeBookAuthorsDto: EditBookAuthorsDto): Promise<Book> {
+  async removeAuthors(
+    removeBookAuthorsDto: DbEditBookAuthorsDto,
+  ): Promise<Book> {
     const book = new Book();
     book.id = removeBookAuthorsDto.book.id;
     book.name = removeBookAuthorsDto.book.name;

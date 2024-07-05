@@ -1,11 +1,11 @@
 import { Gender } from '../models/author.model';
 
-export class CreateAuthorDto {
+export class DbCreateAuthorDto {
   name: string;
   description: string;
   gender: Gender;
 }
 
-export class UpdateAuthorDto extends CreateAuthorDto {
+export class DbUpdateAuthorDto extends DbCreateAuthorDto {
   id: number;
 }

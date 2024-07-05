@@ -1,34 +1,23 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Author } from './entities/author.entity';
-import { Repository, In } from 'typeorm';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
+import { AuthorsDbService } from 'src/database/services/authors-db/authors-db.service';
+import {
+  DbCreateAuthorDto,
+  DbUpdateAuthorDto,
+} from 'src/database/dto/author.dto';
 
 @Injectable()
 export class AuthorsService {
-  constructor(
-    @InjectRepository(Author)
-    private readonly authorsRepository: Repository<Author>,
-  ) {}
+  constructor(private readonly authorsDbService: AuthorsDbService) {}
 
   async findAll(): Promise<Author[]> {
-    return await this.authorsRepository.find({
-      relations: {
-        books: true,
-      },
-    });
+    return this.authorsDbService.findAll();
   }
 
   async findOneById(id: number): Promise<Author | null> {
-    const author = await this.authorsRepository.findOne({
-      where: {
-        id,
-      },
-      relations: {
-        books: true,
-      },
-    });
+    const author = await this.authorsDbService.findOneById(id);
 
     if (!author) {
       throw new NotFoundException(`Author with ID ${id} not found`);
@@ -38,20 +27,17 @@ export class AuthorsService {
   }
 
   async findManyById(ids: number[]): Promise<Author[]> {
-    return this.authorsRepository.find({
-      where: {
-        id: In(ids),
-      },
-    });
+    return this.authorsDbService.findManyById(ids);
   }
 
-  async createone(createAuthorDto: CreateAuthorDto): Promise<Author> {
-    const author = new Author();
+  async createOne(createAuthorDto: CreateAuthorDto): Promise<Author> {
+    const dbCreateAuthorDto: DbCreateAuthorDto = {
+      name: createAuthorDto.name,
+      gender: createAuthorDto.gender,
+      description: createAuthorDto.description,
+    };
 
-    author.name = createAuthorDto.name;
-    author.description = createAuthorDto.description;
-    author.gender = createAuthorDto.gender;
-    return await this.authorsRepository.save(author);
+    return this.authorsDbService.createOne(dbCreateAuthorDto);
   }
 
   async updateOne(
@@ -59,17 +45,19 @@ export class AuthorsService {
     updateAuthorDto: UpdateAuthorDto,
   ): Promise<Author | null> {
     await this.findOneById(id);
-    const author = new Author();
-    author.id = id;
-    author.name = updateAuthorDto.name;
-    author.description = updateAuthorDto.description;
-    author.gender = updateAuthorDto.gender;
-    return await this.authorsRepository.save(author);
+
+    const dbUpdateAuthorDto: DbUpdateAuthorDto = {
+      id,
+      name: updateAuthorDto.name,
+      gender: updateAuthorDto.gender,
+      description: updateAuthorDto.description,
+    };
+
+    return this.authorsDbService.updateOne(dbUpdateAuthorDto);
   }
 
   async deleteOne(id: number): Promise<number | null> {
     await this.findOneById(id);
-    await this.authorsRepository.delete(id);
-    return id;
+    return this.authorsDbService.deleteOne(id);
   }
 }
