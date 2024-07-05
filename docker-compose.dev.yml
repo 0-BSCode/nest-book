@@ -22,9 +22,11 @@ services:
     restart: always
     ports:
       - 8888:80
+    env_file:
+      - .env
     environment:
-      - PGADMIN_DEFAULT_EMAIL=test@gmail.com
-      - PGADMIN_DEFAULT_PASSWORD=password
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
     volumes:
       - book-api-admin:/var/lib/pgadmin
     depends_on:
