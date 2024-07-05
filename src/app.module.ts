@@ -8,6 +8,7 @@ import { BooksModule } from './modules/books/books.module';
 import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './filters/http-exception/http-exception.filter';
 import { config } from './config/config';
+import { DatabaseModule } from './database/database.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { config } from './config/config';
     }),
     AuthorsModule,
     BooksModule,
+    DatabaseModule,
   ],
   controllers: [AppController],
   providers: [
