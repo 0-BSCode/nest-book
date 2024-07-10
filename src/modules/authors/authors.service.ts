@@ -1,7 +1,6 @@
 import {
   Injectable,
   InternalServerErrorException,
-  Logger,
   NotFoundException,
 } from '@nestjs/common';
 import { Author } from 'src/database/models/author.model';
@@ -15,7 +14,6 @@ import {
 
 @Injectable()
 export class AuthorsService {
-  private logger = new Logger(AuthorsService.name);
   constructor(private readonly authorsDbService: AuthorsDbService) {}
 
   async findAll(): Promise<Author[]> {
@@ -25,7 +23,6 @@ export class AuthorsService {
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to fetch all authors: ${error.message}`;
-        this.logger.error(msg, error.stack);
         throw new InternalServerErrorException(msg);
       }
     }
@@ -43,7 +40,6 @@ export class AuthorsService {
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to fetch author with ID ${id}: ${error.message}`;
-        this.logger.error(msg, error.stack);
         if (error instanceof NotFoundException) {
           throw new NotFoundException(msg);
         }
@@ -59,7 +55,6 @@ export class AuthorsService {
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to fetch authors: ${error.message}`;
-        this.logger.error(msg, error.stack);
         throw new InternalServerErrorException(msg);
       }
     }
@@ -78,7 +73,6 @@ export class AuthorsService {
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to create author: ${error.message}`;
-        this.logger.error(msg, error.stack);
         throw new InternalServerErrorException(msg);
       }
     }
@@ -103,7 +97,6 @@ export class AuthorsService {
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to update author with ID ${id}: ${error.message}`;
-        this.logger.error(msg, error.stack);
         throw new InternalServerErrorException(msg);
       }
     }
@@ -118,7 +111,6 @@ export class AuthorsService {
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to delete author with ID ${id}: ${error.message}`;
-        this.logger.error(msg, error.stack);
         throw new InternalServerErrorException(msg);
       }
     }
