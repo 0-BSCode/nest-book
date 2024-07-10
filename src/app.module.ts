@@ -9,7 +9,6 @@ import { APP_FILTER } from '@nestjs/core';
 import { HttpExceptionFilter } from './filters/http-exception/http-exception.filter';
 import { config } from './config/config';
 import { DatabaseModule } from './database/database.module';
-import { ServerExceptionFilter } from './filters/server-exception/server-exception.filter';
 
 @Module({
   imports: [
@@ -41,10 +40,6 @@ import { ServerExceptionFilter } from './filters/server-exception/server-excepti
     {
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: ServerExceptionFilter,
     },
   ],
 })
