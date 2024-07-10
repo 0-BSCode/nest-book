@@ -33,36 +33,27 @@ export class BooksService {
     }
   }
 
-  async findOneById(id: number): Promise<Book | null> {
-    try {
-      const book = await this.booksDbService.findOneById(id);
+  async findOneById(id: number): Promise<Book> {
+    const book = await this.booksDbService.findOneById(id);
 
-      if (!book) {
-        throw new NotFoundException(`Book with ID ${id} not found`);
-      }
-
-      return book;
-    } catch (error) {
-      if (error instanceof Error) {
-        const msg = `Failed to fetch book with ID ${id}: ${error.message}`;
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(msg);
-        }
-        throw new InternalServerErrorException(msg);
-      }
+    // If this is here, no need to return null since it'll throw this
+    if (!book) {
+      throw new NotFoundException(`Book with ID ${id} not found`);
     }
+
+    return book;
   }
 
   async createOne(createBookDto: CreateBookDto): Promise<Book | null> {
+    const authors = await this.authorsDbService.findManyById(
+      createBookDto.authorIds,
+    );
+
+    if (authors.length !== createBookDto.authorIds.length) {
+      throw new NotFoundException(`One or more authors not found`);
+    }
+
     try {
-      const authors = await this.authorsDbService.findManyById(
-        createBookDto.authorIds,
-      );
-
-      if (authors.length !== createBookDto.authorIds.length) {
-        throw new NotFoundException(`One or more authors not found`);
-      }
-
       const dbCreateBookDto: DbCreateBookDto = {
         name: createBookDto.name,
         description: createBookDto.description,
@@ -75,9 +66,6 @@ export class BooksService {
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to create book: ${error.message}`;
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(msg);
-        }
         throw new InternalServerErrorException(msg);
       }
     }
@@ -88,30 +76,26 @@ export class BooksService {
     updateBookDto: UpdateBookDto,
   ): Promise<Book | null> {
     await this.findOneById(id);
+    const authors = await this.authorsDbService.findManyById(
+      updateBookDto.authorIds,
+    );
+
+    if (authors.length !== updateBookDto.authorIds.length) {
+      throw new NotFoundException(`One or more authors not found`);
+    }
+
+    const dbUpdateBookDto: DbUpdateBookDto = {
+      ...updateBookDto,
+      id,
+      authors,
+    };
 
     try {
-      const authors = await this.authorsDbService.findManyById(
-        updateBookDto.authorIds,
-      );
-
-      if (authors.length !== updateBookDto.authorIds.length) {
-        throw new NotFoundException(`One or more authors not found`);
-      }
-
-      const dbUpdateBookDto: DbUpdateBookDto = {
-        id,
-        authors,
-        ...updateBookDto,
-      };
-
       const updatedBook = await this.booksDbService.updateOne(dbUpdateBookDto);
       return updatedBook;
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to update book with ID ${id}: ${error.message}`;
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(msg);
-        }
         throw new InternalServerErrorException(msg);
       }
     }
@@ -134,25 +118,21 @@ export class BooksService {
   async addAuthors(id: number, authorIds: number[]): Promise<Book | null> {
     const book = await this.findOneById(id);
 
+    const authors = await this.authorsDbService.findManyById(authorIds);
+    if (authors.length !== authorIds.length) {
+      throw new NotFoundException(`One or more authors not found`);
+    }
+
+    const dbDddAuthorsDto: DbEditBookAuthorsDto = {
+      authors,
+      book,
+    };
     try {
-      const authors = await this.authorsDbService.findManyById(authorIds);
-      if (authors.length !== authorIds.length) {
-        throw new NotFoundException(`One or more authors not found`);
-      }
-
-      const dbDddAuthorsDto: DbEditBookAuthorsDto = {
-        authors,
-        book,
-      };
-
       const updatedBook = await this.booksDbService.addAuthors(dbDddAuthorsDto);
       return updatedBook;
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to add authors to book with ID ${id}: ${error.message}`;
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(msg);
-        }
         throw new InternalServerErrorException(msg);
       }
     }
@@ -161,32 +141,29 @@ export class BooksService {
   async removeAuthors(id: number, authorIds: number[]): Promise<Book | null> {
     const book = await this.findOneById(id);
 
+    const authors = await this.authorsDbService.findManyById(authorIds);
+    if (authors.length !== authorIds.length) {
+      throw new NotFoundException(`One or more authors not found`);
+    }
+
+    const hasAllAuthors = book.authors.every((author) =>
+      authorIds.includes(author.id),
+    );
+    if (!hasAllAuthors) {
+      throw new NotFoundException(`Provided author isn't author of book`);
+    }
+
+    const dbRemoveAuthorsDto: DbEditBookAuthorsDto = {
+      authors,
+      book,
+    };
     try {
-      const authors = await this.authorsDbService.findManyById(authorIds);
-      if (authors.length !== authorIds.length) {
-        throw new NotFoundException(`One or more authors not found`);
-      }
-
-      const hasAllAuthors = book.authors.every((author) =>
-        authorIds.includes(author.id),
-      );
-      if (!hasAllAuthors) {
-        throw new NotFoundException(`Provided author isn't author of book`);
-      }
-
-      const dbRemoveAuthorsDto: DbEditBookAuthorsDto = {
-        authors,
-        book,
-      };
       const updatedBook =
         await this.booksDbService.removeAuthors(dbRemoveAuthorsDto);
       return updatedBook;
     } catch (error) {
       if (error instanceof Error) {
         const msg = `Failed to remove authors from book with ID ${id}: ${error.message}`;
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(msg);
-        }
         throw new InternalServerErrorException(msg);
       }
     }

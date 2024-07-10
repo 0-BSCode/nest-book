@@ -28,24 +28,14 @@ export class AuthorsService {
     }
   }
 
-  async findOneById(id: number): Promise<Author | null> {
-    try {
-      const author = await this.authorsDbService.findOneById(id);
+  async findOneById(id: number): Promise<Author> {
+    const author = await this.authorsDbService.findOneById(id);
 
-      if (!author) {
-        throw new NotFoundException(`Author with ID ${id} not found`);
-      }
-
-      return author;
-    } catch (error) {
-      if (error instanceof Error) {
-        const msg = `Failed to fetch author with ID ${id}: ${error.message}`;
-        if (error instanceof NotFoundException) {
-          throw new NotFoundException(msg);
-        }
-        throw new InternalServerErrorException(msg);
-      }
+    if (!author) {
+      throw new NotFoundException(`Author with ID ${id} not found`);
     }
+
+    return author;
   }
 
   async findManyById(ids: number[]): Promise<Author[]> {
@@ -61,11 +51,7 @@ export class AuthorsService {
   }
 
   async createOne(createAuthorDto: CreateAuthorDto): Promise<Author> {
-    const dbCreateAuthorDto: DbCreateAuthorDto = {
-      name: createAuthorDto.name,
-      gender: createAuthorDto.gender,
-      description: createAuthorDto.description,
-    };
+    const dbCreateAuthorDto: DbCreateAuthorDto = createAuthorDto;
 
     try {
       const author = await this.authorsDbService.createOne(dbCreateAuthorDto);
@@ -84,14 +70,12 @@ export class AuthorsService {
   ): Promise<Author | null> {
     await this.findOneById(id);
 
-    try {
-      const dbUpdateAuthorDto: DbUpdateAuthorDto = {
-        id,
-        name: updateAuthorDto.name,
-        gender: updateAuthorDto.gender,
-        description: updateAuthorDto.description,
-      };
+    const dbUpdateAuthorDto: DbUpdateAuthorDto = {
+      ...updateAuthorDto,
+      id,
+    };
 
+    try {
       const author = await this.authorsDbService.updateOne(dbUpdateAuthorDto);
       return author;
     } catch (error) {

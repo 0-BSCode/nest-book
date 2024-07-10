@@ -22,7 +22,7 @@ export class BooksDbService {
     });
   }
 
-  async findOneById(id: number): Promise<Book> {
+  async findOneById(id: number): Promise<Book | null> {
     return this.booksRepository.findOne({
       where: {
         id,
@@ -34,11 +34,13 @@ export class BooksDbService {
   }
 
   async createOne(createBookDto: DbCreateBookDto): Promise<Book | null> {
+    // not needed since input is valid already
     const book = new Book();
     book.name = createBookDto.name;
     book.description = createBookDto.description;
     book.price = createBookDto.price;
     book.authors = createBookDto.authors;
+    // Just pass createBookDto if properties are exactly the same
     return this.booksRepository.save(book);
   }
 
