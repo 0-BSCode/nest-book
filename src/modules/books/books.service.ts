@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { Book } from 'src/database/models/book.model';
 import { CreateBookDto } from './dto/create-book.dto';
 import { UpdateBookDto } from './dto/update-book.dto';
@@ -18,36 +22,65 @@ export class BooksService {
   ) {}
 
   async findAll(): Promise<Book[]> {
-    return this.booksDbService.findAll();
+    try {
+      const books = await this.booksDbService.findAll();
+      return books;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to fetch all books: ${error.message}`;
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 
   async findOneById(id: number): Promise<Book | null> {
-    const book = await this.booksDbService.findOneById(id);
+    try {
+      const book = await this.booksDbService.findOneById(id);
 
-    if (!book) {
-      throw new NotFoundException(`Book with ID ${id} not found`);
+      if (!book) {
+        throw new NotFoundException(`Book with ID ${id} not found`);
+      }
+
+      return book;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to fetch book with ID ${id}: ${error.message}`;
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(msg);
+        }
+        throw new InternalServerErrorException(msg);
+      }
     }
-
-    return book;
   }
 
   async createOne(createBookDto: CreateBookDto): Promise<Book | null> {
-    const authors = await this.authorsDbService.findManyById(
-      createBookDto.authorIds,
-    );
+    try {
+      const authors = await this.authorsDbService.findManyById(
+        createBookDto.authorIds,
+      );
 
-    if (authors.length !== createBookDto.authorIds.length) {
-      throw new NotFoundException(`One or more authors not found`);
+      if (authors.length !== createBookDto.authorIds.length) {
+        throw new NotFoundException(`One or more authors not found`);
+      }
+
+      const dbCreateBookDto: DbCreateBookDto = {
+        name: createBookDto.name,
+        description: createBookDto.description,
+        price: createBookDto.price,
+        authors: authors,
+      };
+
+      const newBook = await this.booksDbService.createOne(dbCreateBookDto);
+      return newBook;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to create book: ${error.message}`;
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(msg);
+        }
+        throw new InternalServerErrorException(msg);
+      }
     }
-
-    const dbCreateBookDto: DbCreateBookDto = {
-      name: createBookDto.name,
-      description: createBookDto.description,
-      price: createBookDto.price,
-      authors: authors,
-    };
-
-    return this.booksDbService.createOne(dbCreateBookDto);
   }
 
   async updateOne(
@@ -56,62 +89,106 @@ export class BooksService {
   ): Promise<Book | null> {
     await this.findOneById(id);
 
-    const authors = await this.authorsDbService.findManyById(
-      updateBookDto.authorIds,
-    );
+    try {
+      const authors = await this.authorsDbService.findManyById(
+        updateBookDto.authorIds,
+      );
 
-    if (authors.length !== updateBookDto.authorIds.length) {
-      throw new NotFoundException(`One or more authors not found`);
+      if (authors.length !== updateBookDto.authorIds.length) {
+        throw new NotFoundException(`One or more authors not found`);
+      }
+
+      const dbUpdateBookDto: DbUpdateBookDto = {
+        id,
+        authors,
+        ...updateBookDto,
+      };
+
+      const updatedBook = await this.booksDbService.updateOne(dbUpdateBookDto);
+      return updatedBook;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to update book with ID ${id}: ${error.message}`;
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(msg);
+        }
+        throw new InternalServerErrorException(msg);
+      }
     }
-
-    const dbUpdateBookDto: DbUpdateBookDto = {
-      id,
-      authors,
-      ...updateBookDto,
-    };
-
-    return this.booksDbService.updateOne(dbUpdateBookDto);
   }
 
   async deleteOne(id: number): Promise<number | null> {
     await this.findOneById(id);
-    return this.booksDbService.deleteOne(id);
+
+    try {
+      const bookId = await this.booksDbService.deleteOne(id);
+      return bookId;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to delete book with ID ${id}: ${error.message}`;
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 
   async addAuthors(id: number, authorIds: number[]): Promise<Book | null> {
     const book = await this.findOneById(id);
 
-    const authors = await this.authorsDbService.findManyById(authorIds);
-    if (authors.length !== authorIds.length) {
-      throw new NotFoundException(`One or more authors not found`);
+    try {
+      const authors = await this.authorsDbService.findManyById(authorIds);
+      if (authors.length !== authorIds.length) {
+        throw new NotFoundException(`One or more authors not found`);
+      }
+
+      const dbDddAuthorsDto: DbEditBookAuthorsDto = {
+        authors,
+        book,
+      };
+
+      const updatedBook = await this.booksDbService.addAuthors(dbDddAuthorsDto);
+      return updatedBook;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to add authors to book with ID ${id}: ${error.message}`;
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(msg);
+        }
+        throw new InternalServerErrorException(msg);
+      }
     }
-
-    const dbDddAuthorsDto: DbEditBookAuthorsDto = {
-      authors,
-      book,
-    };
-
-    return this.booksDbService.addAuthors(dbDddAuthorsDto);
   }
 
   async removeAuthors(id: number, authorIds: number[]): Promise<Book | null> {
     const book = await this.findOneById(id);
-    const authors = await this.authorsDbService.findManyById(authorIds);
-    if (authors.length !== authorIds.length) {
-      throw new NotFoundException(`One or more authors not found`);
-    }
 
-    const hasAllAuthors = book.authors.every((author) =>
-      authorIds.includes(author.id),
-    );
-    if (!hasAllAuthors) {
-      throw new NotFoundException(`Provided author isn't author of book`);
-    }
+    try {
+      const authors = await this.authorsDbService.findManyById(authorIds);
+      if (authors.length !== authorIds.length) {
+        throw new NotFoundException(`One or more authors not found`);
+      }
 
-    const dbRemoveAuthorsDto: DbEditBookAuthorsDto = {
-      authors,
-      book,
-    };
-    return this.booksDbService.removeAuthors(dbRemoveAuthorsDto);
+      const hasAllAuthors = book.authors.every((author) =>
+        authorIds.includes(author.id),
+      );
+      if (!hasAllAuthors) {
+        throw new NotFoundException(`Provided author isn't author of book`);
+      }
+
+      const dbRemoveAuthorsDto: DbEditBookAuthorsDto = {
+        authors,
+        book,
+      };
+      const updatedBook =
+        await this.booksDbService.removeAuthors(dbRemoveAuthorsDto);
+      return updatedBook;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to remove authors from book with ID ${id}: ${error.message}`;
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(msg);
+        }
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 }
