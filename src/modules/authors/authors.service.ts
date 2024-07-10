@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { Author } from 'src/database/models/author.model';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
@@ -10,24 +15,54 @@ import {
 
 @Injectable()
 export class AuthorsService {
+  private logger = new Logger(AuthorsService.name);
   constructor(private readonly authorsDbService: AuthorsDbService) {}
 
   async findAll(): Promise<Author[]> {
-    return this.authorsDbService.findAll();
+    try {
+      const authors = await this.authorsDbService.findAll();
+      return authors;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to fetch all authors: ${error.message}`;
+        this.logger.error(msg, error.stack);
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 
   async findOneById(id: number): Promise<Author | null> {
-    const author = await this.authorsDbService.findOneById(id);
+    try {
+      const author = await this.authorsDbService.findOneById(id);
 
-    if (!author) {
-      throw new NotFoundException(`Author with ID ${id} not found`);
+      if (!author) {
+        throw new NotFoundException(`Author with ID ${id} not found`);
+      }
+
+      return author;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to fetch author with ID ${id}: ${error.message}`;
+        this.logger.error(msg, error.stack);
+        if (error instanceof NotFoundException) {
+          throw new NotFoundException(msg);
+        }
+        throw new InternalServerErrorException(msg);
+      }
     }
-
-    return author;
   }
 
   async findManyById(ids: number[]): Promise<Author[]> {
-    return this.authorsDbService.findManyById(ids);
+    try {
+      const authors = await this.authorsDbService.findManyById(ids);
+      return authors;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to fetch authors: ${error.message}`;
+        this.logger.error(msg, error.stack);
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 
   async createOne(createAuthorDto: CreateAuthorDto): Promise<Author> {
@@ -37,7 +72,16 @@ export class AuthorsService {
       description: createAuthorDto.description,
     };
 
-    return this.authorsDbService.createOne(dbCreateAuthorDto);
+    try {
+      const author = await this.authorsDbService.createOne(dbCreateAuthorDto);
+      return author;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to create author: ${error.message}`;
+        this.logger.error(msg, error.stack);
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 
   async updateOne(
@@ -46,18 +90,37 @@ export class AuthorsService {
   ): Promise<Author | null> {
     await this.findOneById(id);
 
-    const dbUpdateAuthorDto: DbUpdateAuthorDto = {
-      id,
-      name: updateAuthorDto.name,
-      gender: updateAuthorDto.gender,
-      description: updateAuthorDto.description,
-    };
+    try {
+      const dbUpdateAuthorDto: DbUpdateAuthorDto = {
+        id,
+        name: updateAuthorDto.name,
+        gender: updateAuthorDto.gender,
+        description: updateAuthorDto.description,
+      };
 
-    return this.authorsDbService.updateOne(dbUpdateAuthorDto);
+      const author = await this.authorsDbService.updateOne(dbUpdateAuthorDto);
+      return author;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to update author with ID ${id}: ${error.message}`;
+        this.logger.error(msg, error.stack);
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 
   async deleteOne(id: number): Promise<number | null> {
     await this.findOneById(id);
-    return this.authorsDbService.deleteOne(id);
+
+    try {
+      const authorId = await this.authorsDbService.deleteOne(id);
+      return authorId;
+    } catch (error) {
+      if (error instanceof Error) {
+        const msg = `Failed to delete author with ID ${id}: ${error.message}`;
+        this.logger.error(msg, error.stack);
+        throw new InternalServerErrorException(msg);
+      }
+    }
   }
 }
